@@ -4,11 +4,14 @@ import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkLowLevel.MotorType;
+import java.util.function.DoubleSupplier;
 
 import com.playingwithfusion.*;
 import com.playingwithfusion.TimeOfFlight.RangingMode;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 
 import static frc.robot.Constants.*;
 
@@ -20,6 +23,7 @@ public class Intake extends SubsystemBase {
     public boolean NoteSensed;
     public double position;
     public double appliedOutput;
+    public double power;
 
     private CANSparkMax intakeMotor;
     private TimeOfFlight TOFSensor;
@@ -53,7 +57,11 @@ public class Intake extends SubsystemBase {
 
   public void setPower(double power) {
     intakeMotor.set(power);
+  }
 
+  public void setCPower(DoubleSupplier powerSup){
+    power = MathUtil.applyDeadband(powerSup.getAsDouble(), Constants.SwerveConstants.stickDeadband);
+    intakeMotor.set(power / 4.0);
   }
 
 

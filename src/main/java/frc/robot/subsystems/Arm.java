@@ -104,24 +104,16 @@ public class Arm extends SubsystemBase {
 
   public void setPosition(String position) {
     if (position.equals("INTAKE")) {
-      targetAngle = 225; 
-      //setArmAngle(216);
+      targetAngle = 226; 
     } else if (position.equals("AMP")) {
       targetAngle = 110;
-      //setArmAngle(171);
     } else if (position.equals("SHOOT")) {
-      targetAngle = 1;
-      //setArmAngle(20);
-    }else if (position.equals("CLIMB")){
-      targetAngle = 216;
-      //setArmAngle(216);
+      targetAngle = 0;
     }else if (position.equals("HI_INTAKE")){
       targetAngle = 151;
-      //setArmAngle(151);
     }
       else if (position.equals("POSTSHOOT")){
         targetAngle = 10;
-
       }
     }
   

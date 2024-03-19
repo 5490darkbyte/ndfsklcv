@@ -1,9 +1,11 @@
 package frc.robot.commands;
 
 import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
-
+import frc.robot.Constants;
 import frc.robot.subsystems.Climber;
 import static frc.robot.Constants.*;
 
@@ -11,14 +13,15 @@ import static frc.robot.Constants.*;
 public class ClimberCommand extends Command {
   private final Climber climberSubsystem;
 
-  private final BooleanSupplier cancel;
+  private BooleanSupplier cancel;
 
-  private final double power;
+  private DoubleSupplier powerSup;
+  private double power;
 
-  public ClimberCommand(Climber climberSubsystem, double power, BooleanSupplier cancel) {
+  public ClimberCommand(Climber climberSubsystem, DoubleSupplier powerSup, BooleanSupplier cancel) {
     this.climberSubsystem = climberSubsystem;
     this.cancel = cancel;
-    this.power = power;
+    this.powerSup = powerSup;
     addRequirements(climberSubsystem);
   }
 
@@ -31,6 +34,7 @@ public class ClimberCommand extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
+    power = MathUtil.applyDeadband(powerSup.getAsDouble(), Constants.SwerveConstants.stickDeadband);
     climberSubsystem.setWinchPower(power*WINCH_POWER);
   }
 

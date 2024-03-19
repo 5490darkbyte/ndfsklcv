@@ -28,24 +28,33 @@ public class RobotContainer {
     private final Trigger main_bA = new JoystickButton(driveController, 1);
     private final Trigger main_bB = new JoystickButton(driveController, 2);
     private final Trigger main_bY = new JoystickButton(driveController, 4);
-    private final Trigger main_LBumper = new JoystickButton(operatorController, 5);
 
 
     private final Trigger op_bX = new JoystickButton(operatorController, 3);
     private final Trigger op_bA = new JoystickButton(operatorController, 1);
     private final Trigger op_bB = new JoystickButton(operatorController, 2);
     private final Trigger op_bY = new JoystickButton(operatorController, 4);
+    private final Trigger op_start = new JoystickButton(operatorController, 8);
     private final Trigger op_LBumper = new JoystickButton(operatorController, 5);
     private final Trigger op_RBumper = new JoystickButton(operatorController, 6);
+   
 
 
      //Button and Axis values for swerve controls
      private final int translationAxis = XboxController.Axis.kLeftY.value;
      private final int strafeAxis = XboxController.Axis.kLeftX.value;
      private final int rotationAxis = XboxController.Axis.kRightX.value;
+     private final int rightUpAxis = XboxController.Axis.kRightY.value;
+     private final int LTrigger = XboxController.Axis.kLeftTrigger.value;
+     private final int RTrigger = XboxController.Axis.kRightTrigger.value;
      private final JoystickButton zeroGyro = new JoystickButton(driveController, XboxController.Button.kY.value);
      private final JoystickButton driverBumper = new JoystickButton(driveController, 6);
   
+
+    private final Trigger op_bLTrigger = new Trigger(() -> operatorController.getRawAxis(LTrigger) > .07);
+    private final Trigger op_bRTrigger = new Trigger(() -> operatorController.getRawAxis(RTrigger) > .07);
+
+
 
     //Declare Subsystem variables
     private Swerve swerveSubsystem;
@@ -56,21 +65,13 @@ public class RobotContainer {
     private Climber climberSubsystemR;
 
 
+    
     //Declare sequential command groups
     public TeleopSwerve DriveCommand;
     private SequentialCommandGroup shootNote;
     private SequentialCommandGroup intakeNote;
-    private SequentialCommandGroup hiIntake;
-    private SequentialCommandGroup climberUp;
     private SequentialCommandGroup ampDeposit;
-    private SequentialCommandGroup feedNoteBack;
-    private SequentialCommandGroup feedNoteForward;
-    // private SequentialCommandGroup leftClimbUp;
-    // private SequentialCommandGroup leftClimbDown;
-    // private SequentialCommandGroup RightClimbUp;
-    // private SequentialCommandGroup RightClimbDown;
-
-
+    private SequentialCommandGroup resetClimber; 
 
     public SequentialCommandGroup shootNoteAuto;
     public SequentialCommandGroup autoDriveForward;
@@ -88,8 +89,8 @@ public class RobotContainer {
     //Initialize subsystems
     private void createSubsystems() {
         swerveSubsystem = new Swerve();
-        climberSubsystemL = new Climber(CLIMBER_WINCH_MOTOR_L);
-        climberSubsystemR = new Climber(CLIMBER_WINCH_MOTOR_R);
+        climberSubsystemL = new Climber(CLIMBER_WINCH_MOTOR_L, false);
+        climberSubsystemR = new Climber(CLIMBER_WINCH_MOTOR_R, true);
         intakeSubsystem = new Intake(INTAKE_MOTOR, TOF_SENSOR_ID);
         shooterSubsystem = new Shooter(SHOOTER_LEFT, SHOOTER_RIGHT);
         armSubsystem = new Arm(ARM_MOTOR_LEFT, ARM_MOTOR_RIGHT); 
@@ -130,6 +131,8 @@ public class RobotContainer {
       intakeNote.addCommands(new IntakeCommand(intakeSubsystem, () -> operatorController.getRawButton(2), 0.5)); //press B to cancel
       intakeNote.addCommands(new InstantCommand(() -> armSubsystem.setPosition("SHOOT")));
       
+
+
       /* 
       //Put arm in high intake position, spin intake, put arm in shoot position
       hiIntake = new SequentialCommandGroup();
@@ -147,9 +150,9 @@ public class RobotContainer {
 
       
       //Put arm in climb position, climb with left climber
-      // climberL = new SequentialCommandGroup();
-      // climberL.addCommands(new InstantCommand(() -> armSubsystem.setPosition("CLIMB")));
-      // climberL.addCommands(new ClimberCommand(climberSubsystemL,() -> operatorController.getRawButton(3)));
+      //climberLup = new SequentialCommandGroup();
+      //climberLup.addCommands(new InstantCommand(() -> armSubsystem.setPosition("INTAKE")));
+      //climberLup.addCommands(new ClimberCommand(climberSubsystemL, () -> operatorController.getRawAxis(rightUpAxis),() -> operatorController.getRawButton(2)));
 
       // //Put arm in climb position, climb with right climber
       // climberR = new SequentialCommandGroup();
@@ -157,31 +160,28 @@ public class RobotContainer {
       // climberR.addCommands(new ClimberCommand(climberSubsystemR, () -> operatorController.getRawButton(2)));
 
       
-      climberUp = new SequentialCommandGroup();
-      climberUp.addCommands(new ClimberCommand(climberSubsystemR, -1.0, () -> main_LBumper.getAsBoolean()));
-      climberUp.addCommands(new ClimberCommand(climberSubsystemR, -1.0, () -> main_LBumper.getAsBoolean()));
-      climberUp.addCommands(new ClimberCommand(climberSubsystemL, 1.0, () -> main_LBumper.getAsBoolean()));
-      climberUp.addCommands(new ClimberCommand(climberSubsystemL, 1.0, () -> main_LBumper.getAsBoolean()));
+      // //Run intake in reverse at .2 power for .025 seconds
+      // feedNoteBack = new SequentialCommandGroup();
+      // feedNoteBack.addCommands(new InstantCommand(() -> intakeSubsystem.setPower(() -> -operatorController.getRawAxis(LTrigger))));
+      // feedNoteBack.addCommands(new WaitCommand(0.025));
+      // feedNoteBack.addCommands(new InstantCommand(() -> intakeSubsystem.setPower(0.0)));
 
-      //Run intake in reverse at .2 power for .025 seconds
-      feedNoteBack = new SequentialCommandGroup();
-      feedNoteBack.addCommands(new InstantCommand(() -> intakeSubsystem.setPower(-.2)));
-      feedNoteBack.addCommands(new WaitCommand(0.025));
-      feedNoteBack.addCommands(new InstantCommand(() -> intakeSubsystem.setPower(0.0)));
-
-      //Run intake at .2 power for .025 seconds
-      feedNoteForward = new SequentialCommandGroup();
-      feedNoteForward .addCommands(new InstantCommand(() -> intakeSubsystem.setPower(0.2)));
-      feedNoteForward .addCommands(new WaitCommand(0.025));
-      feedNoteForward .addCommands(new InstantCommand(() -> intakeSubsystem.setPower(0.0)));
-
+      // //Run intake at .2 power for .025 seconds
+      // feedNoteForward = new SequentialCommandGroup();
+      // feedNoteForward .addCommands(new InstantCommand(() -> intakeSubsystem.setPower(0.2)));
+      // feedNoteForward .addCommands(new WaitCommand(0.025));
+      // feedNoteForward .addCommands(new InstantCommand(() -> intakeSubsystem.setPower(0.0)));
 
       shootNoteAuto = new SequentialCommandGroup();
       shootNoteAuto.addCommands(new InstantCommand(() -> shooterSubsystem.setPowers(1)));
       shootNoteAuto.addCommands(new UnloadCommand(intakeSubsystem, () -> operatorController.getRawButton(2), .4) //press B to cancel
         .alongWith(new InstantCommand(() -> armSubsystem.setPosition("POSTSHOOT"))));
       shootNoteAuto.addCommands(new StopShooterCommand(shooterSubsystem));
+      
 
+      resetClimber = new SequentialCommandGroup();
+      resetClimber.addCommands(new InstantCommand(() -> climberSubsystemL.resetSensor()));
+      resetClimber.addCommands(new InstantCommand(() -> climberSubsystemR.resetSensor()));
 
       /*
       //Auto command to drive robot forward
@@ -237,7 +237,7 @@ public class RobotContainer {
 
   private void configureButtonBindings(){
     //Driver Buttons
-    zeroGyro.onTrue(new InstantCommand(() -> swerveSubsystem.zeroGyro()));
+    main_bA.onTrue(new InstantCommand(() -> swerveSubsystem.zeroGyro()));
 
     driverBumper.whileTrue(
       new TeleopSwerve(
@@ -249,10 +249,19 @@ public class RobotContainer {
             2.5, 4.0, 3));
     
 
-    main_bY.whileTrue(climberUp);
+
     
     //Operator Buttons
 
+    climberSubsystemR.setDefaultCommand(new ClimberCommand(climberSubsystemR, () -> -operatorController.getRawAxis(rightUpAxis), () -> operatorController.getRawButton(2)));
+    climberSubsystemL.setDefaultCommand(new ClimberCommand(climberSubsystemL, () -> -operatorController.getRawAxis(translationAxis), () -> operatorController.getRawButton(2)));
+
+    op_LBumper.onTrue(new InstantCommand(() -> armSubsystem.setPosition("INTAKE")));
+    op_RBumper.onTrue(new InstantCommand(() -> armSubsystem.setPosition("SHOOT")));
+    op_bLTrigger.whileTrue(new InstantCommand(() -> intakeSubsystem.setCPower(() -> -operatorController.getRawAxis(LTrigger))));
+    op_bRTrigger.whileTrue(new InstantCommand(() -> intakeSubsystem.setCPower(() -> operatorController.getRawAxis(RTrigger))));
+
+    op_start.onTrue(resetClimber);
     //Press A to staTrt. Moves arm to intake position. Spins intake. Moves arm to Shoot position.
     //Cancel intake spinning with B (or cancels when TOF sensor is triggered)
     op_bA.onTrue(intakeNote);
@@ -266,8 +275,8 @@ public class RobotContainer {
     op_bX.onTrue(ampDeposit);
 
     //Inch intake slightly back (Left Bumper) and slightly forward (Right Bumper)
-    op_LBumper.onTrue(feedNoteBack);
-    op_RBumper.onTrue(feedNoteForward);
+    // op_LBumper.onTrue(feedNoteBack);
+    // op_RBumper.onTrue(feedNoteForward);
   }
 
 

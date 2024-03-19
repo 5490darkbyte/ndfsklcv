@@ -1,10 +1,8 @@
 package frc.robot.subsystems;
-import com.revrobotics.CANSparkBase.IdleMode;
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.CANSparkLowLevel.MotorType;
-import static frc.robot.Constants.*;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 
@@ -14,31 +12,20 @@ public class Climber extends SubsystemBase {
     public double angularPos;
     public double appliedPower;
 
-    //*Motor needs to be changed*
-    private CANSparkMax climberWinchMotor;
+    private double modulatedPower;
 
-    private RelativeEncoder climberWinchMotorEncoder;
 
+    private TalonFX climberWinchMotor;
     private boolean isBrake;
 
 
 
 
-  public Climber(int IDclimberWinchMotor) {
-    
-    climberWinchMotor = new CANSparkMax(IDclimberWinchMotor, MotorType.kBrushless);
-    
-    climberWinchMotorEncoder = climberWinchMotor.getEncoder();
-   
-    climberWinchMotor.setSmartCurrentLimit(40);
-    climberWinchMotor.setIdleMode(IdleMode.kBrake);
-    climberWinchMotor.setInverted(true);
-
-    climberWinchMotorEncoder.setPositionConversionFactor(WINCH_RATIO * Math.PI * 2);
-    climberWinchMotorEncoder.setVelocityConversionFactor(WINCH_RATIO * Math.PI * 2 / 60);
-    climberWinchMotorEncoder.setPosition(0.0);
+  public Climber(int IDclimberWinchMotor, boolean isInverted) {
+    climberWinchMotor = new TalonFX(IDclimberWinchMotor, "CANivore");
+    climberWinchMotor.setNeutralMode(NeutralModeValue.Brake);
     isBrake = true;
-   
+    climberWinchMotor.setInverted(isInverted);
   }
 
   @Override
@@ -48,24 +35,31 @@ public class Climber extends SubsystemBase {
   }
 
   public void setWinchPower(double power) {
-    climberWinchMotor.set(power);
-
+    if(this.angularPos > 95.0 && power > 0){
+      modulatedPower = 0.0;
+    }
+    else if(this.angularPos < -1.0 && power < 0){
+      modulatedPower = 0.0;
+    } 
+    else 
+      modulatedPower = power;
+    climberWinchMotor.set(modulatedPower);
   }
 
   private void updateInputs(){
     climberisBrake = isBrake;
-    climberCurrent = climberWinchMotor.getOutputCurrent();
-    appliedPower = climberWinchMotor.getAppliedOutput();
-    angularPos = climberWinchMotorEncoder.getPosition();
+    climberCurrent = climberWinchMotor.getSupplyCurrent().getValueAsDouble();
+    angularPos = climberWinchMotor.getPosition().getValueAsDouble();
+    SmartDashboard.putNumber("Climber Pos " + climberWinchMotor.getDeviceID(), angularPos);
+    appliedPower = climberWinchMotor.getMotorVoltage().getValueAsDouble();
   }
 
-  private void setBreak(boolean brake){
-    if (brake) {
-        climberWinchMotor.setIdleMode(IdleMode.kBrake);
-    } else {
-        climberWinchMotor.setIdleMode(IdleMode.kCoast);
-    }
-    isBrake = brake;
-}
+  public void resetSensor(){
+    climberWinchMotor.setPosition(0.0);
+  }
+
+  // public boolean isReady(){
+  //   return (angular)
+  // }
 
 }
