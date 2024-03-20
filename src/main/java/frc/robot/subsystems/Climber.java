@@ -34,7 +34,8 @@ public class Climber extends SubsystemBase {
 
   }
 
-  public void setWinchPower(double power) {
+  public void setWinchPower(double power, boolean override) {
+   if(!override){
     if(this.angularPos > 95.0 && power > 0){
       modulatedPower = 0.0;
     }
@@ -43,7 +44,10 @@ public class Climber extends SubsystemBase {
     } 
     else 
       modulatedPower = power;
-    climberWinchMotor.set(modulatedPower);
+  }
+  else 
+    modulatedPower = power;
+  climberWinchMotor.set(modulatedPower);
   }
 
   private void updateInputs(){
@@ -52,6 +56,10 @@ public class Climber extends SubsystemBase {
     angularPos = climberWinchMotor.getPosition().getValueAsDouble();
     SmartDashboard.putNumber("Climber Pos " + climberWinchMotor.getDeviceID(), angularPos);
     appliedPower = climberWinchMotor.getMotorVoltage().getValueAsDouble();
+  }
+
+  public double getAngle(){
+    return this.angularPos;
   }
 
   public void resetSensor(){

@@ -23,6 +23,7 @@ public class Robot extends TimedRobot {
   //Names for autos
   private static final String kDoNothing = "Do Nothing";
   private static final String kShootNoteAuto = "Shoot Note";
+  private static final String kShootAndBack = "Shoot Note and Back";
   
   //Declare variable for storing selected auto name
   private String m_autoSelected;
@@ -45,6 +46,8 @@ public class Robot extends TimedRobot {
     //Set options for the sendable chooser
     m_chooser.setDefaultOption("Do Nothing", kDoNothing);
     m_chooser.addOption("Shoot Note", kShootNoteAuto);
+    m_chooser.addOption("Shoot Note and Back", kShootAndBack);
+
 
     //Put the auto choices on the smart dashboard
     SmartDashboard.putData("Auto Choices", m_chooser);
@@ -92,6 +95,8 @@ public class Robot extends TimedRobot {
       case kShootNoteAuto:
         m_autonomousCommand = m_robotContainer.shootNoteAuto;
         break;
+      case kShootAndBack:
+        m_autonomousCommand = m_robotContainer.fireAndBack;
     }
     // schedule the autonomous command
     if (m_autonomousCommand != null) {

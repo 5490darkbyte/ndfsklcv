@@ -1,11 +1,12 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController; 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -35,6 +36,7 @@ public class RobotContainer {
     private final Trigger op_bB = new JoystickButton(operatorController, 2);
     private final Trigger op_bY = new JoystickButton(operatorController, 4);
     private final Trigger op_start = new JoystickButton(operatorController, 8);
+    private final Trigger op_back = new JoystickButton(operatorController, 7);
     private final Trigger op_LBumper = new JoystickButton(operatorController, 5);
     private final Trigger op_RBumper = new JoystickButton(operatorController, 6);
    
@@ -51,8 +53,8 @@ public class RobotContainer {
      private final JoystickButton driverBumper = new JoystickButton(driveController, 6);
   
 
-    private final Trigger op_bLTrigger = new Trigger(() -> operatorController.getRawAxis(LTrigger) > .07);
-    private final Trigger op_bRTrigger = new Trigger(() -> operatorController.getRawAxis(RTrigger) > .07);
+    private final Trigger op_bLTrigger = new Trigger(() -> operatorController.getRawAxis(LTrigger) > 0.0);
+    private final Trigger op_bRTrigger = new Trigger(() -> operatorController.getRawAxis(RTrigger) > 0.0);
 
 
 
@@ -78,6 +80,7 @@ public class RobotContainer {
     public SequentialCommandGroup autoShootDrive;
     public SequentialCommandGroup autoAmpBlue;
     public SequentialCommandGroup autoAmpRed;
+    public SequentialCommandGroup fireAndBack;
 
 
     public RobotContainer() {
@@ -93,7 +96,7 @@ public class RobotContainer {
         climberSubsystemR = new Climber(CLIMBER_WINCH_MOTOR_R, true);
         intakeSubsystem = new Intake(INTAKE_MOTOR, TOF_SENSOR_ID);
         shooterSubsystem = new Shooter(SHOOTER_LEFT, SHOOTER_RIGHT);
-        armSubsystem = new Arm(ARM_MOTOR_LEFT, ARM_MOTOR_RIGHT); 
+        armSubsystem = new Arm(ARM_MOTOR_LEFT, ARM_MOTOR_RIGHT, climberSubsystemL, climberSubsystemR); 
     }
 
 
@@ -174,7 +177,7 @@ public class RobotContainer {
 
       shootNoteAuto = new SequentialCommandGroup();
       shootNoteAuto.addCommands(new InstantCommand(() -> shooterSubsystem.setPowers(1)));
-      shootNoteAuto.addCommands(new UnloadCommand(intakeSubsystem, () -> operatorController.getRawButton(2), .4) //press B to cancel
+      shootNoteAuto.addCommands(new UnloadCommand(intakeSubsystem, () -> operatorController.getRawButton(2), .4)//press B to cancel
         .alongWith(new InstantCommand(() -> armSubsystem.setPosition("POSTSHOOT"))));
       shootNoteAuto.addCommands(new StopShooterCommand(shooterSubsystem));
       
@@ -193,6 +196,15 @@ public class RobotContainer {
        
       OTHER AUTO OPTIONS
 
+      */
+      fireAndBack = new SequentialCommandGroup();
+      fireAndBack.addCommands(new InstantCommand(() -> shooterSubsystem.setPowers(1)));
+      fireAndBack.addCommands(new UnloadCommand(intakeSubsystem, () -> operatorController.getRawButton(2), .4)
+        .alongWith(new InstantCommand(() -> armSubsystem.setPosition("POSTSHOOT"))));
+      fireAndBack.addCommands(new StopShooterCommand(shooterSubsystem));
+      fireAndBack.addCommands(new RunCommand(() -> swerveSubsystem.drive((new Translation2d(-5, 0.0)), 0.0, true, true, 1.0)));
+      //press B to cancel
+      /* 
       //Put arm in shoot position, spin shooter, unload intake into shooter, stop shooter
       shootNoteAuto = new SequentialCommandGroup();
       shootNoteAuto.addCommands(new InstantCommand(() -> armSubsystem.setPosition("SHOOT")));
@@ -253,14 +265,14 @@ public class RobotContainer {
     
     //Operator Buttons
 
-    climberSubsystemR.setDefaultCommand(new ClimberCommand(climberSubsystemR, () -> -operatorController.getRawAxis(rightUpAxis), () -> operatorController.getRawButton(2)));
-    climberSubsystemL.setDefaultCommand(new ClimberCommand(climberSubsystemL, () -> -operatorController.getRawAxis(translationAxis), () -> operatorController.getRawButton(2)));
+    climberSubsystemR.setDefaultCommand(new ClimberCommand(climberSubsystemR, () -> -operatorController.getRawAxis(rightUpAxis), () -> operatorController.getRawButton(2), () -> op_back.getAsBoolean()));
+    climberSubsystemL.setDefaultCommand(new ClimberCommand(climberSubsystemL, () -> -operatorController.getRawAxis(translationAxis), () -> operatorController.getRawButton(2), () -> op_back.getAsBoolean()));
 
     op_LBumper.onTrue(new InstantCommand(() -> armSubsystem.setPosition("INTAKE")));
     op_RBumper.onTrue(new InstantCommand(() -> armSubsystem.setPosition("SHOOT")));
-    op_bLTrigger.whileTrue(new InstantCommand(() -> intakeSubsystem.setCPower(() -> -operatorController.getRawAxis(LTrigger))));
-    op_bRTrigger.whileTrue(new InstantCommand(() -> intakeSubsystem.setCPower(() -> operatorController.getRawAxis(RTrigger))));
-
+    op_bLTrigger.whileTrue(new RunCommand(() -> intakeSubsystem.setCPower(() -> -operatorController.getRawAxis(LTrigger))));
+    op_bRTrigger.whileTrue(new RunCommand(() -> intakeSubsystem.setCPower(() -> operatorController.getRawAxis(RTrigger))));
+    
     op_start.onTrue(resetClimber);
     //Press A to staTrt. Moves arm to intake position. Spins intake. Moves arm to Shoot position.
     //Cancel intake spinning with B (or cancels when TOF sensor is triggered)

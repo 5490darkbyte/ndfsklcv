@@ -14,6 +14,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.subsystems.Climber;
 
 public class Arm extends SubsystemBase {
 
@@ -43,13 +44,15 @@ public class Arm extends SubsystemBase {
   //Encoder for arm absolute position and velocity*
   private DutyCycleEncoder ThroughBoreEncoder;
 
-
-  public Arm(int IDleftMotor, int IDrightMotor) {   
+  private Climber lClimber;
+  private Climber rClimber;
+  public Arm(int IDleftMotor, int IDrightMotor, Climber lClimber, Climber rClimber) {   
     
     feedforward = new ArmFeedforward(0.0, .12, 0.0);
     armPIDController = new PIDController(0.012, 0.0, 0.0);
 
-
+    this.lClimber = lClimber;
+    this.rClimber = rClimber;
     //Initialize arm motor controller objects
     armMotor_l = new CANSparkMax(IDleftMotor, CANSparkLowLevel.MotorType.kBrushless);
     armMotor_r = new CANSparkMax(IDrightMotor, CANSparkLowLevel.MotorType.kBrushless);
@@ -97,7 +100,10 @@ public class Arm extends SubsystemBase {
       System.out.println("Arm angle is too small");
     }
     else {
-      setAngle(angle);
+      if(lClimber.getAngle() > 10.0 || rClimber.getAngle() > 10.0){
+      }
+      else
+        setAngle(angle);
     }
 
   }
