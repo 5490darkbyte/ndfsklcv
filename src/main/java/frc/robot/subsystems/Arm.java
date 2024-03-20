@@ -119,7 +119,7 @@ public class Arm extends SubsystemBase {
       targetAngle = 151;
     }
       else if (position.equals("POSTSHOOT")){
-        targetAngle = 10;
+        targetAngle = 5;
       }
     }
   

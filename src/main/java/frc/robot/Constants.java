@@ -51,7 +51,7 @@ public class Constants {
     public static final class SwerveConstants
     {
         //Deadband for Xbox controllers
-        public static final double stickDeadband = 0.05;
+        public static final double stickDeadband = 0.08;
 
         public static final int pigeonID = 13;
         public static final boolean invertGyro = false; // Always ensure Gyro is CCW+ CW-

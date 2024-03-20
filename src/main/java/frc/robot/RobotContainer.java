@@ -111,7 +111,7 @@ public class RobotContainer {
           () -> -driveController.getRawAxis(strafeAxis),
           () -> -driveController.getRawAxis(rotationAxis),
           () -> driveController.getRawButton(XboxController.Button.kLeftBumper.value),
-          Constants.SwerveConstants.MaxSpeed, 1.0, 1.0));
+          Constants.SwerveConstants.MaxSpeed, 4.0, 4.0));
           
       SmartDashboard.putNumber("Rotation after TeleopSwerve", driveController.getRawAxis(rotationAxis));
 
@@ -122,10 +122,14 @@ public class RobotContainer {
       shootNote = new SequentialCommandGroup();  
       shootNote.addCommands(new InstantCommand(() -> armSubsystem.setPosition("SHOOT")));
       shootNote.addCommands(new InstantCommand(() -> shooterSubsystem.setPowers(1)));
-      shootNote.addCommands(new UnloadCommand(intakeSubsystem, () -> operatorController.getRawButton(2), .4) //press B to cancel
-        .alongWith(new InstantCommand(() -> armSubsystem.setPosition("POSTSHOOT"))));
+      shootNote.addCommands(new InstantCommand(() -> armSubsystem.setPosition("POSTSHOOT")));
+      shootNote.addCommands(new WaitCommand(1));
+      shootNote.addCommands(new UnloadCommand(intakeSubsystem, () -> operatorController.getRawButton(2), 0.4)); //Press B to cancel
+          //.alongWith(new InstantCommand(() -> armSubsystem.setPosition("POSTSHOOT"))));
+      shootNote.addCommands(new WaitCommand(1));
       shootNote.addCommands(new StopShooterCommand(shooterSubsystem));
       shootNote.addCommands(new InstantCommand(() -> armSubsystem.setPosition("SHOOT")));
+
 
       //Put arm in intake position, spin intake until note in intake or B button pressed, put arm in shoot position
       intakeNote = new SequentialCommandGroup();
@@ -251,14 +255,14 @@ public class RobotContainer {
     //Driver Buttons
     main_bA.onTrue(new InstantCommand(() -> swerveSubsystem.zeroGyro()));
 
-    driverBumper.whileTrue(
+    driverBumper.toggleOnTrue(
       new TeleopSwerve(
           swerveSubsystem,
           () -> -driveController.getRawAxis(translationAxis),
           () -> -driveController.getRawAxis(strafeAxis),
           () -> -driveController.getRawAxis(rotationAxis),
           () -> driveController.getRawButton(XboxController.Button.kLeftBumper.value),
-            2.5, 4.0, 3));
+            1.5, 18.0, 6.0));
     
 
 
@@ -272,7 +276,11 @@ public class RobotContainer {
     op_RBumper.onTrue(new InstantCommand(() -> armSubsystem.setPosition("SHOOT")));
     op_bLTrigger.whileTrue(new RunCommand(() -> intakeSubsystem.setCPower(() -> -operatorController.getRawAxis(LTrigger))));
     op_bRTrigger.whileTrue(new RunCommand(() -> intakeSubsystem.setCPower(() -> operatorController.getRawAxis(RTrigger))));
-    
+    // op_bY.whileTrue(new RunCommand(() -> shooterSubsystem.setPowers(1)));
+    // op_bY.onFalse(new StopShooterCommand(shooterSubsystem));
+    // op_bY.whileTrue(new RunCommand(() -> intakeSubsystem.setCPower(() -> 1)).alongWith(new RunCommand(() -> armSubsystem.setPosition("POSTSHOOT"))));
+    // op_bY.onFalse(new RunCommand(() -> intakeSubsystem.setCPower(() -> 0)).alongWith(new RunCommand(() -> armSubsystem.setPosition("SHOOT"))));
+    op_bY.onTrue(shootNote);
     op_start.onTrue(resetClimber);
     //Press A to staTrt. Moves arm to intake position. Spins intake. Moves arm to Shoot position.
     //Cancel intake spinning with B (or cancels when TOF sensor is triggered)
@@ -280,7 +288,6 @@ public class RobotContainer {
 
     //Press Y to Start. Moves arm to shoot position. Feeds into Shooter. Spins shooter at full speed.
     //Cancel intake spinning with B
-    op_bY.onTrue(shootNote);
 
     //Press X to start. Moves arm to amp deposit position. Spins intake backwards. Moves arm to Shoot position.
     //Cancel intake spinning with B

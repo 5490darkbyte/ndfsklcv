@@ -11,7 +11,7 @@ public class UnloadCommand extends Command {
     Arm feeder;
 
     private long initTime = -1;
-    private final long placeDuration = 1500;
+    private final long placeDuration = 2000;
     private double power;
 
     private final BooleanSupplier cancel;
