@@ -31,6 +31,8 @@ public class RobotContainer {
     private final Trigger main_bA = new JoystickButton(driveController, 1);
     private final Trigger main_bB = new JoystickButton(driveController, 2);
     private final Trigger main_bY = new JoystickButton(driveController, 4);
+
+    // POVButton is the DPAD. The Angle is like the 'Axis' of the DPAD
     private final Trigger main_dpadUp = new POVButton(driveController, 0);
     private final Trigger main_dpadRight = new POVButton(driveController, 90);
     private final Trigger main_dpadDown = new POVButton(driveController, 180);
@@ -261,6 +263,8 @@ public class RobotContainer {
     //Driver Buttons
     main_bA.onTrue(new InstantCommand(() -> swerveSubsystem.zeroGyro()));
 
+
+    // Changes the swerve drive to a slower/more precise mode
     driverBumper.toggleOnTrue(
       new TeleopSwerve(
           swerveSubsystem,
@@ -269,31 +273,39 @@ public class RobotContainer {
           () -> -driveController.getRawAxis(rotationAxis),
           () -> driveController.getRawButton(XboxController.Button.kLeftBumper.value),
             1.5, 18.0, 6.0));
-    
-
-
+            
+    // Using DPAD (Directional Pad) to rotate the robot (field centric)
+    // Good for alignment against walls. 
+    main_dpadUp.onTrue(new RotateToHeadingCommand(0, swerveSubsystem, 5));
+    main_dpadRight.onTrue(new RotateToHeadingCommand(90, swerveSubsystem, 5));
+    main_dpadDown.onTrue(new RotateToHeadingCommand(180, swerveSubsystem, 5 ));
+    main_dpadLeft.onTrue(new RotateToHeadingCommand(-90, swerveSubsystem, 5));
     
     //Operator Buttons
 
+    // Controls for the climber
     climberSubsystemR.setDefaultCommand(new ClimberCommand(climberSubsystemR, () -> -operatorController.getRawAxis(rightUpAxis), () -> operatorController.getRawButton(2), () -> op_back.getAsBoolean()));
     climberSubsystemL.setDefaultCommand(new ClimberCommand(climberSubsystemL, () -> -operatorController.getRawAxis(translationAxis), () -> operatorController.getRawButton(2), () -> op_back.getAsBoolean()));
-
+    
+    // Manual Control for the arms - used during end game
     op_LBumper.onTrue(new InstantCommand(() -> armSubsystem.setPosition("INTAKE")));
     op_RBumper.onTrue(new InstantCommand(() -> armSubsystem.setPosition("SHOOT")));
+
+    // Manual Control for the intake system. Good for changing verticle orientation of note 
     op_bLTrigger.whileTrue(new RunCommand(() -> intakeSubsystem.setCPower(() -> -operatorController.getRawAxis(LTrigger))));
     op_bRTrigger.whileTrue(new RunCommand(() -> intakeSubsystem.setCPower(() -> operatorController.getRawAxis(RTrigger))));
-    // op_bY.whileTrue(new RunCommand(() -> shooterSubsystem.setPowers(1)));
-    // op_bY.onFalse(new StopShooterCommand(shooterSubsystem));
-    // op_bY.whileTrue(new RunCommand(() -> intakeSubsystem.setCPower(() -> 1)).alongWith(new RunCommand(() -> armSubsystem.setPosition("POSTSHOOT"))));
-    // op_bY.onFalse(new RunCommand(() -> intakeSubsystem.setCPower(() -> 0)).alongWith(new RunCommand(() -> armSubsystem.setPosition("SHOOT"))));
-    op_bY.onTrue(shootNote);
+    
+    /* 
+    op_bY.whileTrue(new RunCommand(() -> shooterSubsystem.setPowers(1)));
+    op_bY.onFalse(new StopShooterCommand(shooterSubsystem));
+    op_bY.whileTrue(new RunCommand(() -> intakeSubsystem.setCPower(() -> 1)).alongWith(new RunCommand(() -> armSubsystem.setPosition("POSTSHOOT"))));
+    op_bY.onFalse(new RunCommand(() -> intakeSubsystem.setCPower(() -> 0)).alongWith(new RunCommand(() -> armSubsystem.setPosition("SHOOT"))));
+    */
+
+    // Zeros the angular position on the Falcon500 motors
     op_start.onTrue(resetClimber);
 
 
-    main_dpadUp.onTrue(new RotateToHeadingCommand(0, swerveSubsystem));
-    main_dpadRight.onTrue(new RotateToHeadingCommand(90, swerveSubsystem));
-    main_dpadDown.onTrue(new RotateToHeadingCommand(180, swerveSubsystem));
-    main_dpadLeft.onTrue(new RotateToHeadingCommand(-90, swerveSubsystem));
     
     //Press A to staTrt. Moves arm to intake position. Spins intake. Moves arm to Shoot position.
     //Cancel intake spinning with B (or cancels when TOF sensor is triggered)
@@ -301,6 +313,7 @@ public class RobotContainer {
 
     //Press Y to Start. Moves arm to shoot position. Feeds into Shooter. Spins shooter at full speed.
     //Cancel intake spinning with B
+    op_bY.onTrue(shootNote);
 
     //Press X to start. Moves arm to amp deposit position. Spins intake backwards. Moves arm to Shoot position.
     //Cancel intake spinning with B
