@@ -99,12 +99,16 @@ public SwerveModuleState[] getStates() {
     for (SwerveModule mod : mSwerveMods) {
       states[mod.moduleNumber] = mod.getState();
     }
-    return states;
+    return states; 
   }
 
   public void zeroGyro() {
     pigeonGyro.setYaw(0);
   }
+
+  public double getHeading() {
+    return pigeonGyro.getYaw().getValueAsDouble();
+  } 
 
   public Rotation2d getYaw(){
     return (Constants.SwerveConstants.invertGyro)

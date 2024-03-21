@@ -5,9 +5,11 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj2.command.button.*;
 import edu.wpi.first.wpilibj.XboxController; 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -29,7 +31,10 @@ public class RobotContainer {
     private final Trigger main_bA = new JoystickButton(driveController, 1);
     private final Trigger main_bB = new JoystickButton(driveController, 2);
     private final Trigger main_bY = new JoystickButton(driveController, 4);
-
+    private final Trigger main_dpadUp = new POVButton(driveController, 0);
+    private final Trigger main_dpadRight = new POVButton(driveController, 90);
+    private final Trigger main_dpadDown = new POVButton(driveController, 180);
+    private final Trigger main_dpadLeft = new POVButton(driveController, 270);
 
     private final Trigger op_bX = new JoystickButton(operatorController, 3);
     private final Trigger op_bA = new JoystickButton(operatorController, 1);
@@ -282,6 +287,13 @@ public class RobotContainer {
     // op_bY.onFalse(new RunCommand(() -> intakeSubsystem.setCPower(() -> 0)).alongWith(new RunCommand(() -> armSubsystem.setPosition("SHOOT"))));
     op_bY.onTrue(shootNote);
     op_start.onTrue(resetClimber);
+
+
+    main_dpadUp.onTrue(new RotateToHeadingCommand(0, swerveSubsystem));
+    main_dpadRight.onTrue(new RotateToHeadingCommand(90, swerveSubsystem));
+    main_dpadDown.onTrue(new RotateToHeadingCommand(180, swerveSubsystem));
+    main_dpadLeft.onTrue(new RotateToHeadingCommand(-90, swerveSubsystem));
+    
     //Press A to staTrt. Moves arm to intake position. Spins intake. Moves arm to Shoot position.
     //Cancel intake spinning with B (or cancels when TOF sensor is triggered)
     op_bA.onTrue(intakeNote);
