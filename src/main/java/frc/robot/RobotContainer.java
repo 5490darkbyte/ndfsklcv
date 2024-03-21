@@ -112,11 +112,12 @@ public class RobotContainer {
       swerveSubsystem.setDefaultCommand(
         new TeleopSwerve(
           swerveSubsystem, 
-          () -> -driveController.getRawAxis(translationAxis), 
-          () -> -driveController.getRawAxis(strafeAxis),
-          () -> -driveController.getRawAxis(rotationAxis),
+          () -> (.06*(Math.pow(-driveController.getRawAxis(translationAxis), 3))+(1-0.6)* -driveController.getRawAxis(translationAxis)), 
+          () -> (.06*(Math.pow(-driveController.getRawAxis(strafeAxis),3))+(1-0.6)*-driveController.getRawAxis(strafeAxis)),
+          () -> (.06*(Math.pow(-driveController.getRawAxis(rotationAxis),3))+(1-0.6)*-driveController.getRawAxis(rotationAxis)),
           () -> driveController.getRawButton(XboxController.Button.kLeftBumper.value),
           Constants.SwerveConstants.MaxSpeed, 4.0, 4.0));
+    
           
       SmartDashboard.putNumber("Rotation after TeleopSwerve", driveController.getRawAxis(rotationAxis));
 
